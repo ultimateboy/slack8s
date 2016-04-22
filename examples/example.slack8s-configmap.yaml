@@ -1,0 +1,9 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: slack8s
+data:
+  slack-token: "abcd-1234123412-ABCD1abcd2ABCD3abcd4ABCD"
+  slack-channel: "#general"
+

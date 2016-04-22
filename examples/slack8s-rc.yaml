@@ -1,0 +1,36 @@
+---
+kind: ReplicationController
+apiVersion: v1
+metadata:
+  name: slack8s
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    app: slack8s
+  template:
+    metadata:
+      name: slack8s
+      labels:
+        app: slack8s
+    spec:
+      containers:
+        - name: slack8s
+          image: ultimateboy/slack8s
+          imagePullPolicy: Always
+          env:
+            - name: SLACK_TOKEN
+              valueFrom:
+                configMapKeyRef:
+                  name: slack8s
+                  key: slack-token
+            - name: SLACK_CHANNEL
+              valueFrom:
+                configMapKeyRef:
+                  name: slack8s
+                  key: slack-channel
+        - name: kube-proxy
+          image: gcr.io/google_containers/kubectl:v0.18.0-120-gaeb4ac55ad12b1-dirty
+          imagePullPolicy: Always
+          args: ["proxy", "-p", "8001"]
+
