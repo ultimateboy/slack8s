@@ -17,7 +17,7 @@ use the image in [docker hub](https://hub.docker.com/r/ultimateboy/slack8s/).
 ## Running
 
 1. Copy the example configmap file:  
-`cp examples/example.slack8s-configmap.yaml slack8s-configmap.yaml`
+`cp examples/example.slack8s-configmap.yaml examples/slack8s-configmap.yaml`
 2. Modify `slack-token` and `slack-channel` variables in your new file.
 3. Create the config map using kubectl:  
 `kubectl create -f examples/slack8s-configmap.yaml`
