@@ -3,6 +3,8 @@
 Infinite loop go program which queries the Kubernetes Event Stream API and
 posts messages to slack for important events.
 
+![Slack8s demo showing creation of pod and then failed backoff loop alerts via Slack.](images/slack8s-demo.png)
+
 ## Building
 
 Given this is an active work in progress, you'll probably want to modify
