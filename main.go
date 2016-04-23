@@ -8,17 +8,22 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/nlopes/slack"
 )
 
+// The GET request to the Kubernetes event watch API returns a JSON object
+// which unmarshals into this Response type.
 type Response struct {
 	Type   string `json:"type"`
 	Object Event  `json:"object"`
 }
 
+// The Event type and its child-types, contain only the values of the response
+// that our alerts currently care about.
 type Event struct {
 	Source         EventSource         `json:"source"`
 	InvolvedObject EventInvolvedObject `json:"involvedObject"`
@@ -43,10 +48,12 @@ type EventInvolvedObject struct {
 	Kind string `json:"kind"`
 }
 
+// Sends a message to the Slack channel about the Event.
 func send_message(e Event, color string) error {
 	api := slack.New(os.Getenv("SLACK_TOKEN"))
 	params := slack.PostMessageParameters{}
 	attachment := slack.Attachment{
+		// The fallback message shows in clients such as IRC or OS X notifications.
 		Fallback: e.Message,
 		Fields: []slack.AttachmentField{
 			slack.AttachmentField{
@@ -76,7 +83,7 @@ func send_message(e Event, color string) error {
 		},
 	}
 
-	// Colors!
+	// Use a color if provided, otherwise try to guess.
 	if color != "" {
 		attachment.Color = color
 	} else if strings.HasPrefix(e.Reason, "Success") {
@@ -119,9 +126,10 @@ func main() {
 			log.Printf("EOF detected.")
 			break
 		} else if err != nil {
+			// Debug output to help when we've failed to decode.
 			htmlData, er := ioutil.ReadAll(resp.Body)
 			if er != nil {
-				log.Printf("Already errored, but failed to read response for log output.")
+				log.Printf("Already failed to decode, but also failed to read response for log output.")
 			}
 			log.Printf(string(htmlData))
 			log.Fatal("Decode: ", err)
@@ -129,7 +137,7 @@ func main() {
 		e := r.Object
 
 		// Log all events for now.
-		log.Printf("Reason: %s\nMessage: %s\nCount: %s\nTimestamp: %s\n\n", e.Reason, e.Message, e.Count, e.FirstTimestamp)
+		log.Printf("Reason: %s\nMessage: %s\nCount: %s\nFirstTimestamp: %s\nLastTimestamp\n\n", e.Reason, e.Message, strconv.Itoa(e.Count), e.FirstTimestamp, e.LastTimestamp)
 
 		send := false
 		color := ""
@@ -165,7 +173,7 @@ func main() {
 		diff := time.Now().Sub(e.LastTimestamp)
 		diffMinutes := int(diff.Minutes())
 		if diffMinutes > 1 {
-			log.Printf("Supressed old message: %s", e.Message)
+			log.Printf("Supressed %s minute old message: %s", strconv.Itoa(diffMinutes), e.Message)
 			send = false
 		}
 
