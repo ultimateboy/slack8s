@@ -16,12 +16,13 @@ use the image in [docker hub](https://hub.docker.com/r/ultimateboy/slack8s/).
 
 ## Running
 
-1. Copy the example configmap file:  
+1. [Create a new Slack Bot](https://my.slack.com/services/new/bot).
+2. Copy the example configmap file:  
 `cp examples/example.slack8s-configmap.yaml examples/slack8s-configmap.yaml`
-2. Modify `slack-token` and `slack-channel` variables in your new file.
-3. Create the config map using kubectl:  
+3. Modify `slack-token` and `slack-channel` variables in your new file.
+4. Create the config map using kubectl:  
 `kubectl create -f examples/slack8s-configmap.yaml`
-4. Create the slack8s replication controller:  
+5. Create the slack8s replication controller:  
 `kubectl create -f examples/slack8s-rc.yaml`
 
 # Todo
