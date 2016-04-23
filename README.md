@@ -25,7 +25,19 @@ use the image in [docker hub](https://hub.docker.com/r/ultimateboy/slack8s/).
 5. Create the slack8s replication controller:  
 `kubectl create -f examples/slack8s-rc.yaml`
 
-# Todo
+## Limitations
+
+1. This does not keep track of which notifications it has sent. You should not
+trust that slack has every event.
+2. When the container dies, if the container takes more than 1 minute to spawn,
+some events will not be posted to slack.
+3. When the container dies, events within 1 minute of the restart will be posted
+to Slack twice.
+4. The watch api seems to hit EOF causing this container to die more often than
+desired. On a busy cluster, the above limitations are more obvious because of this.
+5. Do not attempt to use this as a replacement for a pager.
+
+## Todo
 
 1. Refactor the way in which the types of alerts to send to slack are configured
 2. Add more types of alerts which get posted to slack
