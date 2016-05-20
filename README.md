@@ -1,6 +1,6 @@
 # Kubernetes Events Slack Bot (slack8s)
 
-Infinite loop go program which queries the Kubernetes Event Stream API and
+Kubernetes Slack Integration - Infinite loop go program which queries the Kubernetes Event Stream API and
 posts messages to slack for important events.
 
 ![Slack8s demo showing creation of pod and then failed backoff loop alerts via Slack.](images/slack8s-demo.png)
