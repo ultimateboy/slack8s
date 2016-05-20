@@ -22,8 +22,8 @@ use the image in [docker hub](https://hub.docker.com/r/ultimateboy/slack8s/).
 3. Modify `slack-token` and `slack-channel` variables in your new file.
 4. Create the config map using kubectl:  
 `kubectl create -f examples/slack8s-configmap.yaml`
-5. Create the slack8s replication controller:  
-`kubectl create -f examples/slack8s-rc.yaml`
+5. Create the slack8s deployment:  
+`kubectl create -f examples/slack8s-deployment.yaml`
 
 ## Limitations
 
