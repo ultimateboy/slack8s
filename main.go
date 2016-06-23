@@ -78,9 +78,9 @@ func main() {
 	}
 
 	// Setup a watcher for pods
-	podClient := kubeClient.Pods(api.NamespaceAll)
+	eventClient := kubeClient.Events(api.NamespaceAll)
 	options := api.ListOptions{LabelSelector: labels.Everything()}
-	w, err := podClient.Watch(options)
+	w, err := eventClient.Watch(options)
 	if err != nil {
 		log.Fatalf("Failed to set up watch: %v", err)
 	}
