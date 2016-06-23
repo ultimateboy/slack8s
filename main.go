@@ -85,48 +85,50 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to set up watch: %v", err)
 	}
-	select {
-	case watchEvent, _ := <-w.ResultChan():
+	for {
+		select {
+		case watchEvent, _ := <-w.ResultChan():
 
-		e, _ := watchEvent.Object.(*api.Event)
-		// Log all events for now.
-		log.Printf("Reason: %s\nMessage: %s\nCount: %s\nFirstTimestamp: %s\nLastTimestamp: %s\n\n", e.Reason, e.Message, strconv.Itoa(int(e.Count)), e.FirstTimestamp, e.LastTimestamp)
+			e, _ := watchEvent.Object.(*api.Event)
+			// Log all events for now.
+			log.Printf("Reason: %s\nMessage: %s\nCount: %s\nFirstTimestamp: %s\nLastTimestamp: %s\n\n", e.Reason, e.Message, strconv.Itoa(int(e.Count)), e.FirstTimestamp, e.LastTimestamp)
 
-		send := false
-		color := ""
-		if watchEvent.Type == watch.Added {
-			send = true
-			color = "good"
-		} else if watchEvent.Type == watch.Deleted {
-			send = true
-			color = "warning"
-		} else if e.Reason == "SuccessfulCreate" {
-			send = true
-			color = "good"
-		} else if e.Reason == "NodeReady" {
-			send = true
-			color = "good"
-		} else if e.Reason == "NodeNotReady" {
-			send = true
-			color = "warning"
-		} else if e.Reason == "NodeOutOfDisk" {
-			send = true
-			color = "danger"
-		}
+			send := false
+			color := ""
+			if watchEvent.Type == watch.Added {
+				send = true
+				color = "good"
+			} else if watchEvent.Type == watch.Deleted {
+				send = true
+				color = "warning"
+			} else if e.Reason == "SuccessfulCreate" {
+				send = true
+				color = "good"
+			} else if e.Reason == "NodeReady" {
+				send = true
+				color = "good"
+			} else if e.Reason == "NodeNotReady" {
+				send = true
+				color = "warning"
+			} else if e.Reason == "NodeOutOfDisk" {
+				send = true
+				color = "danger"
+			}
 
-		// For now, dont alert multiple times, except if it's a backoff
-		if e.Count > 1 {
-			send = false
-		}
-		if e.Reason == "BackOff" && e.Count == 3 {
-			send = true
-			color = "danger"
-		}
+			// For now, dont alert multiple times, except if it's a backoff
+			if e.Count > 1 {
+				send = false
+			}
+			if e.Reason == "BackOff" && e.Count == 3 {
+				send = true
+				color = "danger"
+			}
 
-		if send {
-			err = sendMessage(e, color)
-			if err != nil {
-				log.Fatalf("sendMessage: %v", err)
+			if send {
+				err = sendMessage(e, color)
+				if err != nil {
+					log.Fatalf("sendMessage: %v", err)
+				}
 			}
 		}
 	}
