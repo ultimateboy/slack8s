@@ -77,7 +77,7 @@ func main() {
 		log.Fatalf("Failed to create client: %v", err)
 	}
 
-	// Setup a watcher for pods
+	// Setup a watcher for events.
 	eventClient := kubeClient.Events(api.NamespaceAll)
 	options := api.ListOptions{LabelSelector: labels.Everything()}
 	w, err := eventClient.Watch(options)
@@ -86,6 +86,10 @@ func main() {
 	}
 	select {
 	case watchEvent, _ := <-w.ResultChan():
+
+		// Log all events for now.
+		log.Printf("Reason: %s\nMessage: %s\nCount: %s\nFirstTimestamp: %s\nLastTimestamp: %s\n\n", e.Reason, e.Message, strconv.Itoa(e.Count), e.FirstTimestamp, e.LastTimestamp)
+
 		send := false
 		color := ""
 		if watchEvent.Type == watch.Added {
@@ -95,13 +99,11 @@ func main() {
 			send = true
 			color = "warning"
 		}
-		fmt.Printf("%+v\n", watchEvent)
-
 		if send {
 			event, _ := watchEvent.Object.(*api.Event)
 			err = sendMessage(event, color)
 			if err != nil {
-				log.Fatal("sendMessage: ", err)
+				log.Fatalf("sendMessage: %v", err)
 			}
 		}
 	}
