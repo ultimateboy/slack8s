@@ -87,6 +87,7 @@ func main() {
 	select {
 	case watchEvent, _ := <-w.ResultChan():
 
+		e, _ := watchEvent.Object.(*api.Event)
 		// Log all events for now.
 		log.Printf("Reason: %s\nMessage: %s\nCount: %s\nFirstTimestamp: %s\nLastTimestamp: %s\n\n", e.Reason, e.Message, strconv.Itoa(e.Count), e.FirstTimestamp, e.LastTimestamp)
 
@@ -98,10 +99,31 @@ func main() {
 		} else if watchEvent.Type == watch.Deleted {
 			send = true
 			color = "warning"
+		} else if e.Reason == "SuccessfulCreate" {
+			send = true
+			color = "good"
+		} else if e.Reason == "NodeReady" {
+			send = true
+			color = "good"
+		} else if e.Reason == "NodeNotReady" {
+			send = true
+			color = "warning"
+		} else if e.Reason == "NodeOutOfDisk" {
+			send = true
+			color = "danger"
 		}
+
+		// For now, dont alert multiple times, except if it's a backoff
+		if e.Count > 1 {
+			send = false
+		}
+		if e.Reason == "BackOff" && e.Count == 3 {
+			send = true
+			color = "danger"
+		}
+
 		if send {
-			event, _ := watchEvent.Object.(*api.Event)
-			err = sendMessage(event, color)
+			err = sendMessage(e, color)
 			if err != nil {
 				log.Fatalf("sendMessage: %v", err)
 			}
