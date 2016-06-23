@@ -1,57 +1,24 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
-	"io"
-	"io/ioutil"
 	"log"
-	"net/http"
 	"os"
-	"strconv"
 	"strings"
-	"time"
 
 	"github.com/nlopes/slack"
+
+	"k8s.io/kubernetes/pkg/api"
+	client "k8s.io/kubernetes/pkg/client/unversioned"
+	"k8s.io/kubernetes/pkg/labels"
+	"k8s.io/kubernetes/pkg/watch"
 )
 
-// The GET request to the Kubernetes event watch API returns a JSON object
-// which unmarshals into this Response type.
-type Response struct {
-	Type   string `json:"type"`
-	Object Event  `json:"object"`
-}
-
-// The Event type and its child-types, contain only the values of the response
-// that our alerts currently care about.
-type Event struct {
-	Source         EventSource         `json:"source"`
-	InvolvedObject EventInvolvedObject `json:"involvedObject"`
-	Metadata       EventMetadata       `json:"metadata"`
-	Reason         string              `json:"reason"`
-	Message        string              `json:"message"`
-	FirstTimestamp time.Time           `json:"firstTimestamp"`
-	LastTimestamp  time.Time           `json:"lastTimestamp"`
-	Count          int                 `json:"count"`
-}
-
-type EventMetadata struct {
-	Name      string `json:"name"`
-	Namespace string `json:"namespace"`
-}
-
-type EventSource struct {
-	Component string `json:"component"`
-}
-
-type EventInvolvedObject struct {
-	Kind string `json:"kind"`
-}
-
 // Sends a message to the Slack channel about the Event.
-func send_message(e Event, color string) error {
+func sendMessage(e *api.Event, color string) error {
 	api := slack.New(os.Getenv("SLACK_TOKEN"))
 	params := slack.PostMessageParameters{}
+	metadata := e.GetObjectMeta()
 	attachment := slack.Attachment{
 		// The fallback message shows in clients such as IRC or OS X notifications.
 		Fallback: e.Message,
@@ -67,7 +34,7 @@ func send_message(e Event, color string) error {
 			},
 			slack.AttachmentField{
 				Title: "Name",
-				Value: e.Metadata.Name,
+				Value: metadata.GetName(),
 				Short: true,
 			},
 			slack.AttachmentField{
@@ -104,83 +71,37 @@ func send_message(e Event, color string) error {
 }
 
 func main() {
-	url := fmt.Sprintf("http://localhost:8001/api/v1/events?watch=true")
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		log.Fatal("NewRequest: ", err)
-	}
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		log.Fatal("Do: ", err)
-	}
-	defer resp.Body.Close()
-	dec := json.NewDecoder(resp.Body)
-	if resp.StatusCode != 200 {
-		log.Printf(string(resp.Status) + ": " + string(resp.StatusCode))
-		log.Fatal("Non 200 status code returned from Kubernetes API.")
-	}
-	for {
-		var r Response
-		if err := dec.Decode(&r); err == io.EOF {
-			log.Printf("EOF detected.")
-			break
-		} else if err != nil {
-			// Debug output to help when we've failed to decode.
-			htmlData, er := ioutil.ReadAll(resp.Body)
-			if er != nil {
-				log.Printf("Already failed to decode, but also failed to read response for log output.")
-			}
-			log.Printf(string(htmlData))
-			log.Fatal("Decode: ", err)
-		}
-		e := r.Object
 
-		// Log all events for now.
-		log.Printf("Reason: %s\nMessage: %s\nCount: %s\nFirstTimestamp: %s\nLastTimestamp: %s\n\n", e.Reason, e.Message, strconv.Itoa(e.Count), e.FirstTimestamp, e.LastTimestamp)
+	kubeClient, err := client.NewInCluster()
+	if err != nil {
+		log.Fatalf("Failed to create client: %v", err)
+	}
 
+	// Setup a watcher for pods
+	podClient := kubeClient.Pods(api.NamespaceAll)
+	options := api.ListOptions{LabelSelector: labels.Everything()}
+	w, err := podClient.Watch(options)
+	if err != nil {
+		log.Fatalf("Failed to set up watch: %v", err)
+	}
+	select {
+	case watchEvent, _ := <-w.ResultChan():
 		send := false
 		color := ""
-
-		// @todo refactor the configuration of which things to post.
-		if e.Reason == "SuccessfulCreate" {
+		if watchEvent.Type == watch.Added {
 			send = true
 			color = "good"
-		} else if e.Reason == "NodeReady" {
-			send = true
-			color = "good"
-		} else if e.Reason == "NodeNotReady" {
+		} else if watchEvent.Type == watch.Deleted {
 			send = true
 			color = "warning"
-		} else if e.Reason == "NodeOutOfDisk" {
-			send = true
-			color = "danger"
 		}
-
-		// For now, dont alert multiple times, except if it's a backoff
-		if e.Count > 1 {
-			send = false
-		}
-		if e.Reason == "BackOff" && e.Count == 3 {
-			send = true
-			color = "danger"
-		}
-
-		// Do not send any events that are more than 1 minute old.
-		// This assumes events are processed quickly (very likely)
-		// in exchange for not re-notifying of events after a crash
-		// or fresh start.
-		diff := time.Now().Sub(e.LastTimestamp)
-		diffMinutes := int(diff.Minutes())
-		if diffMinutes > 1 {
-			log.Printf("Supressed %s minute old message: %s", strconv.Itoa(diffMinutes), e.Message)
-			send = false
-		}
+		fmt.Printf("%+v\n", watchEvent)
 
 		if send {
-			err = send_message(e, color)
+			event, _ := watchEvent.Object.(*api.Event)
+			err = sendMessage(event, color)
 			if err != nil {
-				log.Fatal("send_message: ", err)
+				log.Fatal("sendMessage: ", err)
 			}
 		}
 	}
