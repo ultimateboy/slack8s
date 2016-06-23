@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/nlopes/slack"
@@ -89,7 +90,7 @@ func main() {
 
 		e, _ := watchEvent.Object.(*api.Event)
 		// Log all events for now.
-		log.Printf("Reason: %s\nMessage: %s\nCount: %s\nFirstTimestamp: %s\nLastTimestamp: %s\n\n", e.Reason, e.Message, strconv.Itoa(e.Count), e.FirstTimestamp, e.LastTimestamp)
+		log.Printf("Reason: %s\nMessage: %s\nCount: %s\nFirstTimestamp: %s\nLastTimestamp: %s\n\n", e.Reason, e.Message, strconv.Itoa(int(e.Count)), e.FirstTimestamp, e.LastTimestamp)
 
 		send := false
 		color := ""
