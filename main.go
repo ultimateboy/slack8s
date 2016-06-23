@@ -90,6 +90,7 @@ func main() {
 		case watchEvent, _ := <-w.ResultChan():
 
 			e, _ := watchEvent.Object.(*api.Event)
+
 			// Log all events for now.
 			log.Printf("Reason: %s\nMessage: %s\nCount: %s\nFirstTimestamp: %s\nLastTimestamp: %s\n\n", e.Reason, e.Message, strconv.Itoa(int(e.Count)), e.FirstTimestamp, e.LastTimestamp)
 
@@ -115,6 +116,11 @@ func main() {
 				color = "danger"
 			}
 
+			// kubelet is loud.
+			if e.Source.Component == "kubelet" {
+				send = false
+			}
+
 			// For now, dont alert multiple times, except if it's a backoff
 			if e.Count > 1 {
 				send = false
@@ -125,10 +131,7 @@ func main() {
 			}
 
 			if send {
-				err = sendMessage(e, color)
-				if err != nil {
-					log.Fatalf("sendMessage: %v", err)
-				}
+				sendMessage(e, color)
 			}
 		}
 	}
