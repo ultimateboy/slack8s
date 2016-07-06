@@ -121,6 +121,8 @@ func main() {
 				send = false
 			} else if e.Source.Component == "controllermanager" {
 				send = false
+			} else if e.Source.Component == "default-scheduler" {
+				send = false
 			}
 
 			// For now, dont alert multiple times, except if it's a backoff
