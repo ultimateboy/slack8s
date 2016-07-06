@@ -116,8 +116,10 @@ func main() {
 				color = "danger"
 			}
 
-			// kubelet is loud.
+			// kubelet and controllermanager are loud.
 			if e.Source.Component == "kubelet" {
+				send = false
+			} else if e.Source.Component == "controllermanager" {
 				send = false
 			}
 
