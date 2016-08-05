@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
         - name: slack8s
-          image: ultimateboy/slack8s
+          image: rosskukulinski/slack8s
           imagePullPolicy: Always
           env:
             - name: SLACK_TOKEN
