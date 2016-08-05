@@ -57,6 +57,11 @@ func send_message(e Event, color string) error {
 		Fallback: e.Message,
 		Fields: []slack.AttachmentField{
 			slack.AttachmentField{
+				Title: "Namespace",
+				Value: e.Metadata.Namespace,
+				Short: true,
+			},
+			slack.AttachmentField{
 				Title: "Message",
 				Value: e.Message,
 			},
