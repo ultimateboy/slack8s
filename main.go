@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"crypto/tls"
 
 	"github.com/nlopes/slack"
 )
@@ -109,12 +110,20 @@ func send_message(e Event, color string) error {
 }
 
 func main() {
-	url := fmt.Sprintf("http://localhost:8001/api/v1/events?watch=true")
+	k8stoken, err := ioutil.ReadFile("/var/run/secrets/kubernetes.io/serviceaccount/token")
+	if err != nil {
+		log.Fatal("ReadFile: ", err)
+	}
+	url := fmt.Sprintf("https://" + os.Getenv("KUBERNETES_SERVICE_HOST") + ":" + os.Getenv("KUBERNETES_PORT_443_TCP_PORT") + "/api/v1/events?watch=true")
 	req, err := http.NewRequest("GET", url, nil)
+	req.Header.Set("Authorization", "Bearer " + string(k8stoken))
 	if err != nil {
 		log.Fatal("NewRequest: ", err)
 	}
-	client := &http.Client{}
+	tr := &http.Transport{
+	    TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+	client := &http.Client{Transport: tr}
 	resp, err := client.Do(req)
 	if err != nil {
 		log.Fatal("Do: ", err)

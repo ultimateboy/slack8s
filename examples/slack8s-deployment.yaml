@@ -33,8 +33,4 @@ spec:
                 configMapKeyRef:
                   name: slack8s
                   key: slack-channel
-        - name: kube-proxy
-          image: gcr.io/google_containers/kubectl:v0.18.0-120-gaeb4ac55ad12b1-dirty
-          imagePullPolicy: Always
-          args: ["proxy", "-p", "8001"]
 
