@@ -23,16 +23,15 @@ dependencies:
 
     - mkdir -p "$(dirname ${WORKDIR})"
     - cp -R "${HOME}/slack8s" "${WORKDIR}"
-    - ls "${WORKDIR}"
 
   post:
     - go env
-    - pwd && ls
 
 test:
   override:
     - cd "${WORKDIR}" && go get && go build:
         parallel: true
+    - ls
 
 deployment:
   release:
