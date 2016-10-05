@@ -5,6 +5,7 @@ machine:
   environment:
     GOVERSION: "1.7.1"
     GOPATH:  "${HOME}/.go_workspace"
+    GOBIN: "$GOPATH/bin"
 
   services:
     - docker
@@ -26,7 +27,7 @@ dependencies:
 
 test:
   override:
-    - go build:
+    - go get ./... && go build ./...:
         parallel: true
     - docker build -t "orangesys/slack8s:0.1.0" .
 
