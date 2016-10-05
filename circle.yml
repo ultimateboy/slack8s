@@ -30,6 +30,11 @@ test:
     - go get ./... && go build ./...:
         parallel: true
     - docker build -t "orangesys/slack8s:0.1.0" .
+    - docker tag "orangesys/slack8s:0.1.0" "asia.gcr.io/orange-sys/slack8s:0.1.0"
+    - sudo /opt/google-cloud-sdk/bin/gcloud --quiet components update
+    - echo $GCLOUD_SERVICE_KEY | base64 --decode -i > ${HOME}/account-auth.json
+    - sudo /opt/google-cloud-sdk/bin/gcloud auth activate-service-account --key-file ${HOME}/account-auth.json
+    - sudo /opt/google-cloud-sdk/bin/gcloud config set project $PROJECT_NAME
 
 deployment:
   release:
@@ -37,3 +42,5 @@ deployment:
     commands:
       - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
       - docker push "orangesys/slack8s:0.1.0"
+      - docker login -e $DOCKER_EMAIL -u _json_key -p "$(cat ${HOME}/account-auth.json)" https://asia.gcr.io
+      - docker push asia.gcr.io/orange-sys/slack8s:0.1.0
