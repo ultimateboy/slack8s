@@ -5,8 +5,6 @@ machine:
   environment:
     GOVERSION: "1.7.1"
     GOPATH:  "${HOME}/.go_workspace"
-    WORKDIR: "${GOPATH}/src/k8s.io/helm"
-    PROJECT_NAME: "kubernetes-helm"
 
   services:
     - docker
@@ -24,6 +22,7 @@ dependencies:
 
   post:
     - go env
+    - pwd && ls
 
 test:
   override:
