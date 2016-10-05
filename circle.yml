@@ -31,7 +31,7 @@ test:
   override:
     - cd "${WORKDIR}" && go get && go build:
         parallel: true
-    - ls
+    - ls "${WORKDIR}"
 
 deployment:
   release:
