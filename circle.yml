@@ -27,7 +27,7 @@ dependencies:
 
 test:
   override:
-    - go build:
+    - go get && go build:
         parallel: true
 
 deployment:
