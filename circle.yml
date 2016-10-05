@@ -5,7 +5,6 @@ machine:
   environment:
     GOVERSION: "1.7.1"
     GOPATH:  "${HOME}/.go_workspace"
-    WORKDIR: "${GOPATH}/src/gavinzhou/slack8s"
 
   services:
     - docker
@@ -14,22 +13,20 @@ dependencies:
   pre:
     # remove old go files
     - sudo rm -rf /usr/local/go
-    - rm -rf "$GOPATH"
 
   override:
     # install go
     - wget "https://storage.googleapis.com/golang/go${GOVERSION}.linux-amd64.tar.gz"
     - sudo tar -C /usr/local -xzf "go${GOVERSION}.linux-amd64.tar.gz"
 
-    - mkdir -p "$(dirname ${WORKDIR})"
-    - cp -R "${HOME}/slack8s" "${WORKDIR}"
+    - mkdir -p "${GOPATH}"
 
   post:
     - go env
 
 test:
   override:
-    - cd "${WORKDIR}" && go get && go build:
+    - cd slack8s && go get && go build:
         parallel: true
     - docker build -t "orangesys/slack8s:0.1.0" .
 
