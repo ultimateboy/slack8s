@@ -26,7 +26,7 @@ dependencies:
 
 test:
   override:
-    - cd /home/ubuntu/slack8s && go get && go build:
+    - go build:
         parallel: true
     - docker build -t "orangesys/slack8s:0.1.0" .
 
