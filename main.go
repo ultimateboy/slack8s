@@ -1,6 +1,8 @@
 package main
 
 import (
+	"crypto/tls"
+	"crypto/x509"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -13,6 +15,11 @@ import (
 	"time"
 
 	"github.com/nlopes/slack"
+)
+
+var (
+	client *http.Client
+        pool *x509.CertPool
 )
 
 // The GET request to the Kubernetes event watch API returns a JSON object
@@ -108,13 +115,18 @@ func send_message(e Event, color string) error {
 	return nil
 }
 
+func init() {
+	pool = x509.NewCertPool()
+	pool.AppendCertsFromPEM(pemCerts)
+	client = &http.Client{Transport: &http.Transport{TLSClientConfig: &tls.Config{RootCAs: pool}}}
+}
+
 func main() {
 	url := fmt.Sprintf("http://localhost:8001/api/v1/events?watch=true")
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		log.Fatal("NewRequest: ", err)
 	}
-	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
 		log.Fatal("Do: ", err)
