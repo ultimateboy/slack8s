@@ -6,4 +6,4 @@ if [ -z "${_tag}" ]; then
     _tag=${_VERSION}
 fi
 
-docker build --tag "slack8s:${_tag}" .
+docker build --tag "orangesys/alpine-slack8s:${_tag}" .
