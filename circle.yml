@@ -16,21 +16,12 @@ machine:
 
 dependencies:
   pre:
-    # remove old go files
-    - sudo rm -rf /usr/local/go
-
-  override:
-    # install go
-    - wget "https://storage.googleapis.com/golang/go${GOVERSION}.linux-amd64.tar.gz"
-    - sudo tar -C /usr/local -xzf "go${GOVERSION}.linux-amd64.tar.gz"
-
-    - mkdir -p "${GOPATH}"
-
-  post:
-    - go env
+    - docker pull golang:1.7.1-alpine
 
 test:
   override:
+    - ls -l
+    - pwd
     - ./build-go:
         parallel: true
     - ./build.sh
