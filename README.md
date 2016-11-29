@@ -1,3 +1,5 @@
+[![](https://images.microbadger.com/badges/image/orangesys/alpine-slack8s.svg)](https://microbadger.com/images/orangesys/alpine-slack8s "Get your own image badge on microbadger.com")
+[![](https://images.microbadger.com/badges/version/orangesys/alpine-slack8s.svg)](https://microbadger.com/images/orangesys/alpine-slack8s "Get your own version badge on microbadger.com")
 # Kubernetes Events Slack Bot (slack8s)
 
 Kubernetes Slack Integration - Infinite loop go program which queries the Kubernetes Event Stream API and
