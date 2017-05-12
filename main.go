@@ -52,53 +52,8 @@ type EventInvolvedObject struct {
 func send_message(e Event, emoji string) error {
 	api := slack.New(os.Getenv("SLACK_TOKEN"))
 
-	msg := fmt.Sprintf("%s %s on %s", emoji, e.Message, e.Source.Host)
+	msg := fmt.Sprintf("%s %s on %s", emoji, e.Message, os.Getenv("CLUSTER_NAME"))
 	params := slack.PostMessageParameters{}
-	// attachment := slack.Attachment{
-	// 	// The fallback message shows in clients such as IRC or OS X notifications.
-	// 	Fallback: e.Message,
-	// 	Fields: []slack.AttachmentField{
-	// 		slack.AttachmentField{
-	// 			Title: "Namespace",
-	// 			Value: e.Metadata.Namespace,
-	// 			Short: true,
-	// 		},
-	// 		slack.AttachmentField{
-	// 			Title: "Message",
-	// 			Value: e.Message,
-	// 		},
-	// 		slack.AttachmentField{
-	// 			Title: "Object",
-	// 			Value: e.InvolvedObject.Kind,
-	// 			Short: true,
-	// 		},
-	// 		slack.AttachmentField{
-	// 			Title: "Name",
-	// 			Value: e.Metadata.Name,
-	// 			Short: true,
-	// 		},
-	// 		slack.AttachmentField{
-	// 			Title: "Reason",
-	// 			Value: e.Reason,
-	// 			Short: true,
-	// 		},
-	// 		slack.AttachmentField{
-	// 			Title: "Component",
-	// 			Value: e.Source.Component,
-	// 			Short: true,
-	// 		},
-	// 	},
-	// }
-
-	// // Use a color if provided, otherwise try to guess.
-	// if color != "" {
-	// 	attachment.Color = color
-	// } else if strings.HasPrefix(e.Reason, "Success") {
-	// 	attachment.Color = "good"
-	// } else if strings.HasPrefix(e.Reason, "Fail") {
-	// 	attachment.Color = "danger"
-	// }
-	// params.Attachments = []slack.Attachment{attachment}
 
 	channelID, timestamp, err := api.PostMessage(os.Getenv("SLACK_CHANNEL"), msg, params)
 	if err != nil {
