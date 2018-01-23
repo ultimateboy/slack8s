@@ -1,3 +1,4 @@
 .DS_Store
 examples/slack8s-configmap.yaml
 slack8s
+bazel-*
