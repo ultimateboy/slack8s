@@ -22,7 +22,7 @@ go_binary(
 )
 
 go_image(
-    name = "slack8s",
+    name = "image",
     embed = [":go_default_library"],
     importpath = "github.com/orangesys/slack8s",
     visibility = ["//visibility:public"],
