@@ -1,0 +1,6 @@
+steps:
+- id: 'build-image'
+  name: 'gcr.io/cloud-builders/bazel'
+  args: ['run', '//:publish']
+
+# images: ['asia.gcr.io/$PROJECT_ID/orangeapi']

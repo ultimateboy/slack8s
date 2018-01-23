@@ -1,0 +1,7 @@
+#!/bin/sh
+
+set -e
+
+#DIR=$(cd $(dirname ${BASH_SOURCE[0]}) && pwd)
+
+docker run --rm -v $(pwd):/go/src/slack8s -w /go/src/slack8s golang:1.7.1-alpine sh -c "apk add --no-cache git; go get; go build"

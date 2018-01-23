@@ -1,0 +1,42 @@
+version: 2
+
+references:
+  container_config: &container_config
+    docker:
+      - image: circleci/openjdk:8-jdk
+    working_directory: ~/containers_by_bazel
+
+jobs:
+  build:
+    <<: *container_config
+    steps:
+      - checkout
+      - run:
+          name: Install bazel
+          command: |
+            echo "deb [arch=amd64] http://storage.googleapis.com/bazel-apt stable jdk1.8" | sudo tee /etc/apt/sources.list.d/bazel.list
+            curl https://bazel.build/bazel-release.pub.gpg | sudo apt-key add -
+            sudo apt-get update
+            sudo apt-get install bazel
+            bazel info release
+      - run:
+          name: Run gazelle
+          command: |
+            bazel run //:gazelle
+      - run:
+          name: Build binary
+          command: |
+            bazel build //:slack8s
+      - run:
+          name: Build image
+          command: |
+            bazel build //:image
+
+workflows:
+  version: 2
+  build-and-deploy:
+    jobs:
+      - build:
+          filters:
+            tags:
+              only: /^v[0-9]+(\.[0-9]+)*/
