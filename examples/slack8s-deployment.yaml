@@ -3,7 +3,7 @@ kind: Deployment
 apiVersion: extensions/v1beta1
 metadata:
   name: slack8s
-  namespace: slack8s
+  namespace: monitoring
 spec:
   replicas: 1
   selector:
@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
         - name: slack8s
-          image: ultimateboy/slack8s
+          image: gcr.io/apt-aleph-767/slack8s:5ce367b9fd6885188c2c67614c85de92e8dcd171
           imagePullPolicy: Always
           env:
             - name: SLACK_TOKEN

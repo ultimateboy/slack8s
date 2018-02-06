@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"os"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/nlopes/slack"
@@ -42,6 +41,7 @@ type EventMetadata struct {
 
 type EventSource struct {
 	Component string `json:"component"`
+	Host      string `json:"host"`
 }
 
 type EventInvolvedObject struct {
@@ -49,56 +49,13 @@ type EventInvolvedObject struct {
 }
 
 // Sends a message to the Slack channel about the Event.
-func send_message(e Event, color string) error {
+func send_message(e Event, emoji string) error {
 	api := slack.New(os.Getenv("SLACK_TOKEN"))
+
+	msg := fmt.Sprintf("%s %s on %s", emoji, e.Message, os.Getenv("CLUSTER_NAME"))
 	params := slack.PostMessageParameters{}
-	attachment := slack.Attachment{
-		// The fallback message shows in clients such as IRC or OS X notifications.
-		Fallback: e.Message,
-		Fields: []slack.AttachmentField{
-			slack.AttachmentField{
-				Title: "Namespace",
-				Value: e.Metadata.Namespace,
-				Short: true,
-			},
-			slack.AttachmentField{
-				Title: "Message",
-				Value: e.Message,
-			},
-			slack.AttachmentField{
-				Title: "Object",
-				Value: e.InvolvedObject.Kind,
-				Short: true,
-			},
-			slack.AttachmentField{
-				Title: "Name",
-				Value: e.Metadata.Name,
-				Short: true,
-			},
-			slack.AttachmentField{
-				Title: "Reason",
-				Value: e.Reason,
-				Short: true,
-			},
-			slack.AttachmentField{
-				Title: "Component",
-				Value: e.Source.Component,
-				Short: true,
-			},
-		},
-	}
 
-	// Use a color if provided, otherwise try to guess.
-	if color != "" {
-		attachment.Color = color
-	} else if strings.HasPrefix(e.Reason, "Success") {
-		attachment.Color = "good"
-	} else if strings.HasPrefix(e.Reason, "Fail") {
-		attachment.Color = "danger"
-	}
-	params.Attachments = []slack.Attachment{attachment}
-
-	channelID, timestamp, err := api.PostMessage(os.Getenv("SLACK_CHANNEL"), "", params)
+	channelID, timestamp, err := api.PostMessage(os.Getenv("SLACK_CHANNEL"), msg, params)
 	if err != nil {
 		fmt.Printf("%s\n", err)
 		return err
@@ -121,6 +78,7 @@ func main() {
 	}
 	defer resp.Body.Close()
 	dec := json.NewDecoder(resp.Body)
+
 	if resp.StatusCode != 200 {
 		log.Printf(string(resp.Status) + ": " + string(resp.StatusCode))
 		log.Fatal("Non 200 status code returned from Kubernetes API.")
@@ -140,26 +98,29 @@ func main() {
 			log.Fatal("Decode: ", err)
 		}
 		e := r.Object
-
+		log.Printf("Type: %s", r.Type)
 		// Log all events for now.
 		log.Printf("Reason: %s\nMessage: %s\nCount: %s\nFirstTimestamp: %s\nLastTimestamp: %s\n\n", e.Reason, e.Message, strconv.Itoa(e.Count), e.FirstTimestamp, e.LastTimestamp)
 
 		send := false
-		color := ""
+		emoji := ""
 
 		// @todo refactor the configuration of which things to post.
 		if e.Reason == "SuccessfulCreate" {
 			send = true
-			color = "good"
+			emoji = ":white_check_mark:"
 		} else if e.Reason == "NodeReady" {
 			send = true
-			color = "good"
+			emoji = ":white_check_mark:"
+		} else if e.Reason == "Failed" {
+			send = true
+			emoji = ":warning:"			
 		} else if e.Reason == "NodeNotReady" {
 			send = true
-			color = "warning"
+			emoji = ":warning:"
 		} else if e.Reason == "NodeOutOfDisk" {
 			send = true
-			color = "danger"
+			emoji = ":skull:"
 		}
 
 		// For now, dont alert multiple times, except if it's a backoff
@@ -168,7 +129,7 @@ func main() {
 		}
 		if e.Reason == "BackOff" && e.Count == 3 {
 			send = true
-			color = "danger"
+			emoji = ":warning:"
 		}
 
 		// Do not send any events that are more than 1 minute old.
@@ -183,7 +144,7 @@ func main() {
 		}
 
 		if send {
-			err = send_message(e, color)
+			err = send_message(e, emoji)
 			if err != nil {
 				log.Fatal("send_message: ", err)
 			}
